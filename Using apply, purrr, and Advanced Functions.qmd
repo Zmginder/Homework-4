@@ -5,6 +5,15 @@ format: pdf
 editor: visual
 ---
 
+```{r}
+#| messsage: false
+#| warning: false
+#Load packages
+library(tidyverse)
+library(httr)
+library(jsonlite)
+```
+
 ## Task 1: Conceptual Questions
 
 ### Question 1: What is the purpose of the lapply() function? What is the equivalent purrr function?
@@ -235,3 +244,36 @@ wrapper(response_vector = resp_df, prediction_vector = pred_df)
 ## Task 3: Querying an API and a Tidy-Style Function
 
 ### Question 1: Use GET() from the httr package to return information about a topic that you are interested in that has been in the news lately (store the result as an R object)
+
+```{r}
+url_1<-"https://newsapi.org/v2/everything?q=Israel&from=2025-06-01"
+url_2<-"&apiKey=d15dc97097334ff5ae67c60790bb91fd"
+israel_unparsed_data<-GET(paste0(url_1,url_2))
+```
+
+### Question 2: Parse what is returned and find your way to the data frame that has the actual article information in it (check content). Note the first column should be a list column.
+
+```{r}
+parsed<-fromJSON(rawToChar(israel_unparsed_data$content))
+Israel_News<-as_tibble(parsed$articles)
+Israel_News
+```
+
+### Question 3: Write a quick function that allows the user to easily query this API. The inputs to the function should be the title/subject to search for (string), a time period to search from (string-you'll search from that time until the present), and an API key.
+
+```{r}
+News_Query<-function(title_subject,time_from,API_key){
+  url=paste0("https://newsapi.org/v2/everything?q=",title_subject,"&from=",
+             time_from,"&apiKey=",API_key)
+  unparsed<-GET(url)
+  parsed<-fromJSON(rawToChar(unparsed$content))
+  News<-as_tibble(parsed$articles)
+  return(News)
+}
+```
+
+```{r}
+#Test Query function
+News_Query(title_subject = "gamestop",time_from = "2025-05-19",
+           API_key = "d15dc97097334ff5ae67c60790bb91fd")
+```
