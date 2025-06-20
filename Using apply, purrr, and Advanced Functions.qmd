@@ -34,3 +34,204 @@ A side-effect function \[like print(), write_csv(), plot()\] does not change the
 ### Question 5: Why can you name a variable sd in a function and not cause any issues with the sd function?
 
 This is because of the environment nature of R. When you call a function, it creates a temporary function environment allowing variables in the function to exist but only in the temporary environment not overwriting the sd() function.
+
+## Task 2: Writing R Functions
+
+### Question 1: Write a function for RMSE
+
+```{r}
+getRMSE<- function(response_vector, prediction_vector,...){
+  difference_squared<- (response_vector-prediction_vector)^2
+  RMSE<-sqrt(mean(difference_squared,...))
+  return(RMSE)
+}
+```
+
+### Question 2: Testing of RMSE function
+
+```{r}
+#Create data
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+```{r}
+#Test RMSE function
+getRMSE(response_vector = resp,prediction_vector = pred)
+```
+
+```{r}
+#Replace two of the response values with missing values (NA_real_)
+resp_with_missing<-resp
+resp_with_missing[c(1,2)]<- NA_real_
+```
+
+```{r}
+#Test RMSE function without specifying na.rm
+getRMSE(response_vector = resp_with_missing, prediction_vector = pred)
+```
+
+```{r}
+#Test RMSE function with specifying na.rm=TRUE
+getRMSE(response_vector = resp_with_missing, prediction_vector = pred, 
+        na.rm=TRUE)
+```
+
+### Question 3: Write a function for mean absolute deviation
+
+```{r}
+getMAE<-function(response_vector, prediction_vector,...){
+  abs_difference<- abs(response_vector-prediction_vector)
+  MAE<-mean(abs_difference,...)
+  return(MAE)
+}
+```
+
+### Question 4: Testing of MAE function
+
+```{r}
+#Create Data
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+```{r}
+#Test RMSE function
+getMAE(response_vector = resp,prediction_vector = pred)
+```
+
+```{r}
+#Replace two of the response values with missing values (NA_real_)
+resp_with_missing<-resp
+resp_with_missing[c(1,2)]<- NA_real_
+```
+
+```{r}
+#Test MAE function without specifying na.rm
+getMAE(response_vector = resp_with_missing, prediction_vector = pred)
+```
+
+```{r}
+#Test MAE function with specifying na.rm=TRUE
+getMAE(response_vector = resp_with_missing, prediction_vector = pred, 
+        na.rm=TRUE)
+```
+
+### Question 5: Create a wrapper function that can be used to get either or both metrics returned with a single function call. Do not rewrite the above two functions, call them inside the wrapper function (we would call the getRMSE() and getMAE() functions helper functions). When returning your values, give them appropriate names
+
+```{r}
+wrapper<-function(response_vector, prediction_vector, 
+                  which_metric=c("RMSE","MAE"),...){
+  if(is.atomic(response_vector) & is.atomic(prediction_vector) &
+     is.vector(response_vector) & is.vector(prediction_vector) &
+     is.numeric(response_vector) & is.numeric(prediction_vector)){
+    if(all(c("RMSE","MAE") %in% which_metric)){
+      RMSE<-getRMSE(response_vector = response_vector,
+                    prediction_vector = prediction_vector,
+                    ...)
+      MAE<-getMAE(response_vector = response_vector,
+                    prediction_vector = prediction_vector,
+                    ...)
+      cat("The RMSE is",RMSE,"\n","The MAE is",MAE,"\n")
+    }else if("RMSE" %in% which_metric){
+      RMSE<-getRMSE(response_vector = response_vector,
+                    prediction_vector = prediction_vector,
+                    ...)
+      cat("The RMSE is",RMSE, "\n")
+    }else if("MAE" %in% which_metric){
+      MAE<-getMAE(response_vector = response_vector,
+                    prediction_vector = prediction_vector,
+                    ...)
+      cat("The MAE is",MAE,"\n")
+    }else{
+      print("Incorrect metrics selected")
+    }
+  }else{
+    print("Error. The inputs must be numeric/atomic vectors")
+  }
+}
+```
+
+### Question 6: Testing of wrapper function
+
+```{r}
+#Create Data
+set.seed(10)
+n <- 100
+x <- runif(n)
+resp <- 3 + 10*x + rnorm(n)
+pred <- predict(lm(resp ~ x), data.frame(x))
+```
+
+```{r}
+#Test wrapper specifying both RMSE and MAE
+wrapper(response_vector = resp, prediction_vector = pred)
+```
+
+```{r}
+#Test wrapper specifying just RMSE
+wrapper(response_vector = resp, prediction_vector = pred,
+        which_metric = "RMSE")
+```
+
+```{r}
+#Test wrapper specifying just MAE
+wrapper(response_vector = resp, prediction_vector = pred,
+        which_metric = "MAE")
+```
+
+```{r}
+#Replace two of the response values with missing values (NA_real_)
+resp_with_missing<-resp
+resp_with_missing[c(1,2)]<- NA_real_
+```
+
+```{r}
+#Test wrapper specifying both RMSE and MAE with missing values
+wrapper(response_vector = resp_with_missing, prediction_vector = pred)
+
+#Test wrapper specifying both RMSE and MAE with missing values
+#And specify na.rm=TRUE
+wrapper(response_vector = resp_with_missing, prediction_vector = pred,
+        na.rm=TRUE)
+```
+
+```{r}
+#Test wrapper specifying RMSE with missing values
+wrapper(response_vector = resp_with_missing, prediction_vector = pred,
+        which_metric="RMSE")
+
+#Test wrapper specifying both RMSE with missing values
+#And specify na.rm=TRUE
+wrapper(response_vector = resp_with_missing, prediction_vector = pred,
+        which_metric="RMSE", na.rm=TRUE)
+```
+
+```{r}
+#Test wrapper specifying MAE with missing values
+wrapper(response_vector = resp_with_missing, prediction_vector = pred,
+        which_metric="MAE")
+
+#Test wrapper specifying both MAE with missing values
+#And specify na.rm=TRUE
+wrapper(response_vector = resp_with_missing, prediction_vector = pred,
+        which_metric="MAE", na.rm=TRUE)
+```
+
+```{r}
+#Test the wrapper function by passing incorrect data (df)
+resp_df<-as.data.frame(resp)
+pred_df<-as.data.frame(pred)
+
+wrapper(response_vector = resp_df, prediction_vector = pred_df)
+```
+
+## Task 3: Querying an API and a Tidy-Style Function
+
+### Question 1: Use GET() from the httr package to return information about a topic that you are interested in that has been in the news lately (store the result as an R object)
