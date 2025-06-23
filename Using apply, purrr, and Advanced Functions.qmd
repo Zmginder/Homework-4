@@ -274,6 +274,6 @@ News_Query<-function(title_subject,time_from,API_key){
 
 ```{r}
 #Test Query function
-News_Query(title_subject = "gamestop",time_from = "2025-05-19",
+News_Query(title_subject = "gamestop",time_from = "2025-06-19",
            API_key = "d15dc97097334ff5ae67c60790bb91fd")
 ```
